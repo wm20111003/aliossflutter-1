@@ -1,10 +1,11 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:aliossflutter/response.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
 class AliOSSFlutter {
-    final MethodChannel _channel = MethodChannel('aliossflutter')
+  final MethodChannel _channel = MethodChannel('aliossflutter')
     ..setMethodCallHandler(_handler);
   static final _uuid = new Uuid();
   String id;
@@ -16,9 +17,8 @@ class AliOSSFlutter {
 
   static final alis = new Map<String, AliOSSFlutter>();
   StreamController<bool> _responseInitController =
-  new StreamController.broadcast();
-  Stream<bool> get responseFromInit =>
-      _responseInitController.stream;
+      new StreamController.broadcast();
+  Stream<bool> get responseFromInit => _responseInitController.stream;
 
   StreamController<ProgressResponse> _responseProgressController =
       new StreamController.broadcast();
@@ -31,7 +31,7 @@ class AliOSSFlutter {
       _responseDownloadController.stream;
 
   StreamController<UploadResponse> _responseUploadController =
-  new StreamController.broadcast();
+      new StreamController.broadcast();
   Stream<UploadResponse> get responseFromUpload =>
       _responseUploadController.stream;
 
@@ -39,20 +39,21 @@ class AliOSSFlutter {
       new StreamController.broadcast();
   Stream<SignResponse> get responseFromSign => _responseSignController.stream;
 
-    StreamController<DeleteResponse> _responseDeleteController =
+  StreamController<DeleteResponse> _responseDeleteController =
       new StreamController.broadcast();
-  Stream<DeleteResponse> get responseFromDelete => _responseDeleteController.stream;
+  Stream<DeleteResponse> get responseFromDelete =>
+      _responseDeleteController.stream;
 
-    StreamController<HeadObjectResponse> _responseHeadObjectController =
-    new StreamController.broadcast();
-    Stream<HeadObjectResponse> get responseFromHeadObject => _responseHeadObjectController.stream;
+  StreamController<HeadObjectResponse> _responseHeadObjectController =
+      new StreamController.broadcast();
+  Stream<HeadObjectResponse> get responseFromHeadObject =>
+      _responseHeadObjectController.stream;
 
   Future<dynamic> _invokeMethod(String method,
       [Map<String, dynamic> arguments = const {}]) {
     Map<String, dynamic> withId = Map.of(arguments);
     withId['id'] = id;
-    return _channel
-        .invokeMethod(method, withId);
+    return _channel.invokeMethod(method, withId);
   }
 
 //监听回调方法
@@ -61,15 +62,15 @@ class AliOSSFlutter {
     AliOSSFlutter oss = alis[id];
     switch (methodCall.method) {
       case "onInit":
-        bool flag=false;
-        if("success"==methodCall.arguments["result"]){
-          flag=true;
+        bool flag = false;
+        if ("success" == methodCall.arguments["result"]) {
+          flag = true;
         }
         oss._responseInitController.add(flag);
         break;
       case "onProgress":
         ProgressResponse res = new ProgressResponse(
-          key: methodCall.arguments["key"].toString(),
+            key: methodCall.arguments["key"].toString(),
             currentSize:
                 double.parse(methodCall.arguments["currentSize"].toString()),
             totalSize:
@@ -77,76 +78,98 @@ class AliOSSFlutter {
         oss._responseProgressController.add(res);
         break;
       case "onSign":
-        SignResponse res=SignResponse(success: false);
-        if("success"==methodCall.arguments["result"]){
-          res.success=true;
-          res.url=methodCall.arguments["url"];
-        }else{
-          res.msg=methodCall.arguments["message"];
+        SignResponse res = SignResponse(success: false);
+        if ("success" == methodCall.arguments["result"]) {
+          res.success = true;
+          res.url = methodCall.arguments["url"];
+        } else {
+          res.msg = methodCall.arguments["message"];
         }
-        res.key=methodCall.arguments["key"].toString();
+        res.key = methodCall.arguments["key"].toString();
         oss._responseSignController.add(res);
         break;
-        case "onDelete":
-        DeleteResponse res=DeleteResponse(success: false);
-        if("success"==methodCall.arguments["result"]){
-          res.success=true;
+      case "onDelete":
+        DeleteResponse res = DeleteResponse(success: false);
+        if ("success" == methodCall.arguments["result"]) {
+          res.success = true;
         }
-        res.key=methodCall.arguments["key"];
+        res.key = methodCall.arguments["key"];
         oss._responseDeleteController.add(res);
         break;
       case "onUpload":
-        UploadResponse res=UploadResponse(success: false);
-        if("success"==methodCall.arguments["result"]){
-          res.success=true;
-          res.servercallback=methodCall.arguments["servercallback"];
-        }else{
-          res.msg=methodCall.arguments["message"];
+        UploadResponse res = UploadResponse(success: false);
+        if ("success" == methodCall.arguments["result"]) {
+          res.success = true;
+          res.servercallback = methodCall.arguments["servercallback"];
+        } else {
+          res.msg = methodCall.arguments["message"];
         }
-        res.key=methodCall.arguments["key"];
+        res.key = methodCall.arguments["key"];
         oss._responseUploadController.add(res);
         break;
       case "onDownload":
-        DownloadResponse res=DownloadResponse(success: false);
-        if("success"==methodCall.arguments["result"]){
-          res.success=true;
-          res.path=methodCall.arguments["path"];
-        }else{
-          res.msg=methodCall.arguments["message"];
+        DownloadResponse res = DownloadResponse(success: false);
+        if ("success" == methodCall.arguments["result"]) {
+          res.success = true;
+          res.path = methodCall.arguments["path"];
+        } else {
+          res.msg = methodCall.arguments["message"];
         }
-        res.key=methodCall.arguments["key"].toString();
+        res.key = methodCall.arguments["key"].toString();
         oss._responseDownloadController.add(res);
         break;
-        case "asyncHeadObject":
-          HeadObjectResponse res=HeadObjectResponse(success: false);
-      if(methodCall.arguments["result"]){
-        res.success=true;
-      }
-      res.key=methodCall.arguments["key"];
-      res.lastModified=methodCall.arguments["lastModified"];
-      oss._responseHeadObjectController.add(res);
-      break;
+      case "asyncHeadObject":
+        HeadObjectResponse res = HeadObjectResponse(success: false);
+        if (methodCall.arguments["result"]) {
+          res.success = true;
+        }
+        res.key = methodCall.arguments["key"];
+        res.lastModified = methodCall.arguments["lastModified"];
+        oss._responseHeadObjectController.add(res);
+        break;
     }
     return Future.value(true);
   }
 
 //上传
-  Future upload(String bucket, String file, String key,{String callbackUrl,String callbackHost,String callbackBodyType,String callbackBody,String callbackVars}) async {
-    return await _invokeMethod(
-        'upload', <String, String>{"bucket": bucket, "file": file, "key": key, "callbackUrl": callbackUrl, "callbackHost": callbackHost, "callbackBodyType": callbackBodyType, "callbackBody": callbackBody, "callbackVars": callbackVars});
-  }
-
-//初始化
-  Future init(String stsserver, String endpoint, {String cryptkey = "",String crypttype = "3des"}) async {
-    return await _invokeMethod('init', <String, String>{
-      "stsserver": stsserver,
-      "endpoint": endpoint,
-      "cryptkey": cryptkey,
-      "crypttype": crypttype
+  Future upload(String bucket, String file, String key,
+      {String callbackUrl,
+      String callbackHost,
+      String callbackBodyType,
+      String callbackBody,
+      String callbackVars}) async {
+    return await _invokeMethod('upload', <String, String>{
+      "bucket": bucket,
+      "file": file,
+      "key": key,
+      "callbackUrl": callbackUrl,
+      "callbackHost": callbackHost,
+      "callbackBodyType": callbackBodyType,
+      "callbackBody": callbackBody,
+      "callbackVars": callbackVars
     });
   }
 
-  Future secretInit(String accessKeyId,String accessKeySecret, String endpoint) async {
+//初始化
+  Future init(
+    String accessKeyId,
+    String accessKeySecret,
+    String securityToken,
+    String expiration,
+    String endpoint,
+  ) async {
+    return await _invokeMethod(
+        Platform.isIOS ? 'init' : 'secretInit', <String, String>{
+      "AccessKeyId": accessKeyId,
+      "AccessKeySecret": accessKeySecret,
+      "SecurityToken": securityToken,
+      "Expiration": expiration,
+      "Endpoint": endpoint,
+    });
+  }
+
+  Future secretInit(
+      String accessKeyId, String accessKeySecret, String endpoint) async {
     return await _invokeMethod('secretInit', <String, String>{
       "endpoint": endpoint,
       "accessKeyId": accessKeyId,
@@ -180,41 +203,40 @@ class AliOSSFlutter {
   }
 
   Future exist(String bucket, String key) async {
-    return await _invokeMethod('doesObjectExist', <String, String>{
-      "bucket": bucket,
-      "key": key
-    });
+    return await _invokeMethod(
+        'doesObjectExist', <String, String>{"bucket": bucket, "key": key});
   }
+
   Future delete(String bucket, String key) async {
     return await _invokeMethod('delete', <String, String>{
       "bucket": bucket,
       "key": key,
     });
   }
+
 //3des 加解密
-  Future des(String key, String type, String data,
-      ) async {
-    return await _invokeMethod('des', <String, String>{
-      "key": key,
-      "type": type,
-      "data": data
-    });
-  }
-  //aes 加解密
-  Future aes(String key, String type, String data,
-      ) async {
-    return await _invokeMethod('aes', <String, String>{
-      "key": key,
-      "type": type,
-      "data": data
-    });
+  Future des(
+    String key,
+    String type,
+    String data,
+  ) async {
+    return await _invokeMethod(
+        'des', <String, String>{"key": key, "type": type, "data": data});
   }
 
-  //获取文件元信息
+  //aes 加解密
+  Future aes(
+    String key,
+    String type,
+    String data,
+  ) async {
+    return await _invokeMethod(
+        'aes', <String, String>{"key": key, "type": type, "data": data});
+  }
+
+  //获取���件元信息
   Future asyncHeadObject(String bucket, String key) async {
-    return await _invokeMethod('asyncHeadObject', <String, String>{
-      "bucket": bucket,
-      "key": key
-    });
+    return await _invokeMethod(
+        'asyncHeadObject', <String, String>{"bucket": bucket, "key": key});
   }
 }
