@@ -135,11 +135,11 @@ public class AliossflutterPlugin implements MethodCallHandler {
                 final String accessKeySecret = _call.argument("AccessKeySecret");
                 final String _id = _call.argument("id");
                 final String securityToken = _call.argument("SecurityToken");
-                final OSSCredentialProvider credentialProvider =new OSSFederationToken(
-                        accessKeyId,accessKeySecret, securityToken, _call.argument("Expiration")
-                );
-//                final OSSCredentialProvider credentialProvider = new OSSStsTokenCredentialProvider(accessKeyId,
-//                        accessKeySecret, securityToken);
+                // final OSSCredentialProvider credentialProvider =new OSSFederationToken(
+                //         accessKeyId,accessKeySecret, securityToken, _call.argument("Expiration")
+                // );
+               final OSSCredentialProvider credentialProvider = new OSSStsTokenCredentialProvider(accessKeyId,
+                       accessKeySecret, securityToken);
                 oss = new OSSClient(registrar.context(), (String) _call.argument("Endpoint"), credentialProvider);
                 return null;
             }
