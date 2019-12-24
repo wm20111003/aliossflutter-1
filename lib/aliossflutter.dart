@@ -158,8 +158,7 @@ class AliOSSFlutter {
     String expiration,
     String endpoint,
   ) async {
-    return await _invokeMethod(
-        Platform.isIOS ? 'init' : 'secretInit', <String, String>{
+    return await _invokeMethod('init', <String, String>{
       "AccessKeyId": accessKeyId,
       "AccessKeySecret": accessKeySecret,
       "SecurityToken": securityToken,
